@@ -2,8 +2,8 @@
 
 // sets dimension and margins of graph
 const margin = { top: 50, right: 50, bottom: 50, left: 50 }
-const width = window.innerWidth - margin.left - margin.right
-const height = window.innerHeight - margin.top - margin.bottom
+const width = window.innerWidth - margin.right - margin.left 
+const height = window.innerHeight - margin.top - margin.bottom 
 
 // converts to percentage by multiplying by 100, then rounding to whole percentage; includes sign for positive and negative
 const formatPercent = d3.format('+.0%') 
@@ -14,7 +14,7 @@ const formatChange = x => formatPercent(x - 1)
 // append SVG to chart element
 const svg = d3.select('#chart')
   .append('svg')
-    .attr('width', width + margin.left + margin.right)
+    .attr('width', width + margin.right + margin.left)
     .attr('height', height + margin.top + margin.bottom)
   // need to group the SVG elements together before they can all be placed by transform:translate
   .append('g')
@@ -26,11 +26,13 @@ const x = d3.scaleTime()
   // range of 0 or left to width or right
   .range([0, width])
 
+
 // adds Y axis
 // `d3.scaleLog` creates a logarithmic scale, a continuous scale in which the domain is transformed by the Math.log function, essential transforming multiplication into addition so a vertical chart can span several orders of magnitude without the smallest values being dwarfed by the largest.
 const y = d3.scaleLinear()
   // remember SVG Y axis is 0 at the top and postive numbers go down, so "height" here is the bottom of the page or the base of the chart and "0" the very top
   .range([height, 0])
+
 
 const dataSet = d3.csv('./data/applemobilitytrends-2020-05-02.csv')
 
@@ -58,28 +60,59 @@ const formatData = data => {
     d.percentageChange = formatChange(d.ratio)
   })
 
+  console.log(honoluluDataSet)
+
   // the domains are the actual data the is mapped to the ranges onscreen
   x.domain(d3.extent(honoluluDataSet, d => d.date))
-  // y.domain(d3.extent(honoluluDataSet, d => d.ratio))
-  y.domain([0,2])
+  y.domain([0,1.5])
+
 
   svg.append('g')
-    .call(d3.axisBottom(x))
-    .attr('transform', `translate(0, ${height})`)
+    .call(d3.axisBottom(x)
+      .tickSize(0))
+      .attr('transform', `translate(0, ${height + 6})`)
+    .call(g => g.select(".domain")
+      .remove())
+
 
   svg.append('g')
-    .call(d3.axisLeft(y)
-      .tickFormat(formatChange))
-      // .tickValues(d3.scaleLinear().domain(y.domain()).ticks()))
+    .attr('transform', `translate(0, 0)`)
+    .attr('class', 'y axis')
+    .call(d3.axisRight(y)
+      .tickFormat(formatChange)
+      .tickSize(width + margin.left)
+      .ticks(12))
+    .call(g => g.select('.domain')
+      .remove())
+    .call(g => g.selectAll('.tick text')
+      .attr('x', 0)
+      .attr('dy', 3)
+      .attr('visibility', d => {
+        console.log(d)
+        if(d * 10 % 2 !== 0) {return 'hidden'} 
+        if(d === 0 || d ===1 ) { return 'hidden'}
+      })
+    )
+
+  // d3.selectAll('g.y.axis g.tick line')
+  //   .attr('x2', d => {
+  //     if(d*10 % 2 == 0) {
+  //       return width
+  //     } else {
+  //       return 0
+  //     }
+  //   })
 
   svg.append('path')
     .datum(honoluluDataSet)
     .attr('fill', 'none')
     .attr('stroke', 'steelblue')
-    .attr('stroke-width', 1.5)
+    .attr('stroke-width', 3)
+    .style("stroke-linejoin","round")
     .attr('d', d3.line()
       .x(d => x(d.date))
       .y(d => y(d.ratio))
+      .curve(d3.curveLinear)
     )
 }
 
