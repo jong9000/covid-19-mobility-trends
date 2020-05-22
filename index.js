@@ -3,7 +3,7 @@
 // sets dimension and margins of graph
 const margin = { top: 150, right: 100, bottom: 50, left: 50 }
 const width = window.innerWidth - margin.right - margin.left 
-const height = window.innerHeight - margin.top - margin.bottom 
+const height = window.innerHeight / 1.5 - margin.top - margin.bottom 
 const tickOffset = 46
 
 // converts to percentage by multiplying by 100, then rounding to whole percentage; includes sign for positive and negative
@@ -114,9 +114,7 @@ const formatData = data => {
 
   d3.selectAll('g.y.axis g.tick line')
     .attr('x2', d => {
-      if(d === 0) { 
-        return width + margin.left
-      } else if(d === 1) {
+      if(d === 0 || d === 1) { 
         return width + margin.left
       } 
         else if(d * 10 % 2 == 0) {
@@ -126,17 +124,14 @@ const formatData = data => {
       }
     })
     .attr('transform', d => {
-      if(d === 0) {
-        return `translate(0, 0)`
-      } else if(d === 1) {
-        return `translate(0, 0)`
-      } else if(d*10 % 2 == 0) {
+      if(d === 0 || d === 1) {
+        return `translate(0,0)`
+      } 
+    
+      if(d*10 % 2 == 0) {
         return `translate(${tickOffset}, 0)`
       } 
     })
-    // .attr('visibility', d => {
-    //   if(d === 1.5) {return 'hidden'}
-    // })
     .attr('stroke', d => {
       if(d === 1) {
         return "rgb(99,99,102)"
