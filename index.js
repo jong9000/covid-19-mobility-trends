@@ -1,9 +1,9 @@
 'use strict'
 
 // sets dimension and margins of graph
-const margin = { top: 150, right: 100, bottom: 50, left: 50 }
-const width = window.innerWidth - margin.right - margin.left 
-const height = window.innerHeight / 1.5 - margin.top - margin.bottom 
+const margin = { top: 50, right: 100, bottom: 150, left: 50 }
+const width = window.innerWidth * .95 - margin.right - margin.left 
+const height = window.innerHeight * .95 - margin.top - margin.bottom 
 const tickOffset = 46
 
 // converts to percentage by multiplying by 100, then rounding to whole percentage; includes sign for positive and negative
@@ -39,12 +39,15 @@ function formatTick(d) {
 
 const dataSet = d3.csv('./data/applemobilitytrends-2020-05-02.csv')
 
+const city = 'Seattle'
+
 const formatData = data => {
 
   // groups same regions together in a MAP entry
   const groupedDataByRegion = d3.group(data, d => d.region)
+  groupedDataByRegion.forEach( (d, key) => console.log(key))
   // gets 'Honolulu" from MAP and picks out first index
-  const honoluluDriving = groupedDataByRegion.get('Honolulu')[0]
+  const honoluluDriving = groupedDataByRegion.get(city)[0]
   // converts to array of arrays with date and values in sub-arrays
   const honoluluDrivingDates = Object.entries(honoluluDriving).slice(4)
 
@@ -82,7 +85,7 @@ const formatData = data => {
         return d.toString().toUpperCase().slice(4, 10)
       }
     }))
-      .attr('transform', `translate(20, ${height + 6})`)
+      .attr('transform', `translate(40, ${height + 6})`)
     .call(g => g.select(".domain")
       .remove())
     .call(g => g.selectAll('.tick text')
@@ -106,7 +109,6 @@ const formatData = data => {
       .attr('font-family', '-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Oxygen,Ubuntu,Cantarell,Open Sans,Helvetica Neue,sans-serif;')
       .attr('opacity', 0.6)
       .attr('visibility', d => {
-        // console.log(d)
         if(d * 10 % 2 !== 0) {return 'hidden'} 
         if(d === 0 || d === 1 ) { return 'hidden'}
       })
@@ -115,12 +117,12 @@ const formatData = data => {
   d3.selectAll('g.y.axis g.tick line')
     .attr('x2', d => {
       if(d === 0 || d === 1) { 
-        return width + margin.left
+        return width + margin.left + margin.right
       } 
         else if(d * 10 % 2 == 0) {
-        return width + margin.left - tickOffset
+        return width + margin.left + margin.right - tickOffset
       } else {
-        return width + margin.left
+        return width + margin.left + margin.right
       }
     })
     .attr('transform', d => {
@@ -139,11 +141,18 @@ const formatData = data => {
         return "#d6d6d6"
       }
     })
+    .attr('opacity', d => {
+      if (d !== 1) {
+        return 0.5
+      } else {
+        return 1
+      }
+    })
 
   svg.append('path')
     .datum(honoluluDataSet)
     .attr('fill', 'none')
-    .attr('stroke', 'steelblue')
+    .attr('stroke', 'rgb(254, 45, 85)')
     .attr('stroke-width', 3)
     .style("stroke-linejoin","round")
     .attr('d', d3.line()
@@ -153,7 +162,41 @@ const formatData = data => {
     )
 
   svg.selectAll('path')
-      .attr('transform', `translate(28, 0)`)
+      .attr('transform', `translate(38, 0)`)
+
+
+  // adds scatterplot
+  svg.selectAll("scatterplot")
+    .data(honoluluDataSet)
+    .enter()
+    .append("circle")
+      .attr("fill", "red")
+      .attr("stroke", "none")
+      .attr("cx", d => x(d.date))
+      .attr("cy",d => y(d.ratio))
+      .attr("r", 4)
+      .attr('visibility', (d, index) => {
+        if (index !== honoluluDataSet.length -1) {
+          return 'hidden'
+        }
+      })
+
+  svg.selectAll('circle')
+      .attr('transform', 'translate(38,0)')
+
+  // legend
+  svg.append('circle')
+    .attr('cx', 8)
+    .attr('cy', height + 44)
+    .attr('r', 6.5)
+    .style('fill', 'rgb(254, 45, 85)')
+  svg.append('text')
+    .attr('x', 24)
+    .attr('y', height + 45)
+    .text(`Driving ${honoluluDataSet[honoluluDataSet.length -1].percentageChange}`)
+    .style('font-size', '14px')
+    .style('fill', 'rgb(254, 45, 85)')
+    .attr('alignment-baseline', 'middle')
 }
 
 dataSet.then(data => formatData(data))
