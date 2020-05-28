@@ -4,7 +4,7 @@
 A rebuild of Apple's [COVID-19](https://www.apple.com/covid19/mobility) site using [D3.js](https://d3js.org/). 
 
 ## Development
-
+Current version is pulling data from CSV file. Chart is displaying "Driving" data for Honolulu, Hi from 1-13-20 thru 5-2-20. 
 
 ## ToDo
 - Add input/seach field to choose region
