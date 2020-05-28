@@ -7,9 +7,12 @@ A rebuild of Apple's COVID-19 site using D3.js.
 
 ## Development
 Currently using downloaded CSV
+[D3.js](https://d3js.org/)
 
 ## ToDo
 - add input field to choose region
 - add ability to compare regions
 - add feature to download data automatically
 
+## License
+- MIT
