@@ -33,19 +33,16 @@ const y = d3.scaleLinear()
   // remember SVG Y axis is 0 at the top and postive numbers go down, so "height" here is the bottom of the page or the base of the chart and "0" the very top
   .range([height, 0])
 
-function formatTick(d) {
-  return d
-}
-
 const dataSet = d3.csv('./data/applemobilitytrends-2020-05-02.csv')
 
-const city = 'Seattle'
+const city = 'Honolulu'
 
 const formatData = data => {
 
   // groups same regions together in a MAP entry
   const groupedDataByRegion = d3.group(data, d => d.region)
-  groupedDataByRegion.forEach( (d, key) => console.log(key))
+  const locationList = []
+  groupedDataByRegion.forEach( (_, key) => locationList.push(key))
   // gets 'Honolulu" from MAP and picks out first index
   const honoluluDriving = groupedDataByRegion.get(city)[0]
   // converts to array of arrays with date and values in sub-arrays
@@ -97,26 +94,49 @@ const formatData = data => {
     .attr('transform', `translate(0, 0)`)
     .attr('class', 'y axis')
     .call(d3.axisRight(y)
-      .tickFormat(formatChange)
+      .tickFormat(d => {
+        if (d === 1) {
+          return "Baseline"
+        } else {
+          return formatChange(d)
+        }
+      })
       .tickSize(width + margin.left)
       .ticks(12))
     .call(g => g.select('.domain')
       .remove())
     .call(g => g.selectAll('.tick text')
-      .attr('x', 8)
+      .attr('x', d => {
+        if(d === 1) {
+          return width + tickOffset + 8
+        }
+      })
       .attr('dy', 3)
       .attr('font-size', '12px')
       .attr('font-family', '-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Oxygen,Ubuntu,Cantarell,Open Sans,Helvetica Neue,sans-serif;')
-      .attr('opacity', 0.6)
+      .attr('fill', '#1D1D1F')
+      .attr('opacity', d => {
+        if(d === 1) {
+          return 0.7
+        } else {
+          return 0.6
+        }
+      })
       .attr('visibility', d => {
         if(d * 10 % 2 !== 0) {return 'hidden'} 
-        if(d === 0 || d === 1 ) { return 'hidden'}
+        if(d === 0 ) { return 'hidden'}
       })
+      .attr('font-weight', "500")
     )
-
+      
   d3.selectAll('g.y.axis g.tick line')
     .attr('x2', d => {
-      if(d === 0 || d === 1) { 
+
+      if(d === 1) {
+        return width + tickOffset - 4
+      }
+      
+      if(d === 0) { 
         return width + margin.left + margin.right
       } 
         else if(d * 10 % 2 == 0) {
@@ -126,9 +146,13 @@ const formatData = data => {
       }
     })
     .attr('transform', d => {
-      if(d === 0 || d === 1) {
+      if(d === 0) {
         return `translate(0,0)`
       } 
+
+      if(d === 1) {
+        return `translate(0, 0)`
+      }
     
       if(d*10 % 2 == 0) {
         return `translate(${tickOffset}, 0)`
@@ -197,6 +221,105 @@ const formatData = data => {
     .style('font-size', '14px')
     .style('fill', 'rgb(254, 45, 85)')
     .attr('alignment-baseline', 'middle')
+
+    autocomplete(document.getElementById("myInput"), locationList)
 }
 
 dataSet.then(data => formatData(data))
+
+function autocomplete(inp, arr) {
+  /*the autocomplete function takes two arguments,
+  the text field element and an array of possible autocompleted values:*/
+  var currentFocus;
+  /*execute a function when someone writes in the text field:*/
+  inp.addEventListener("input", function(e) {
+      var a, b, i, val = this.value;
+      /*close any already open lists of autocompleted values*/
+      closeAllLists();
+      if (!val) { return false;}
+      currentFocus = -1;
+      /*create a DIV element that will contain the items (values):*/
+      a = document.createElement("DIV");
+      a.setAttribute("id", this.id + "autocomplete-list");
+      a.setAttribute("class", "autocomplete-items");
+      /*append the DIV element as a child of the autocomplete container:*/
+      this.parentNode.appendChild(a);
+      /*for each item in the array...*/
+      for (i = 0; i < arr.length; i++) {
+        /*check if the item starts with the same letters as the text field value:*/
+        if (arr[i].substr(0, val.length).toUpperCase() == val.toUpperCase()) {
+          /*create a DIV element for each matching element:*/
+          b = document.createElement("DIV");
+          /*make the matching letters bold:*/
+          b.innerHTML = "<strong>" + arr[i].substr(0, val.length) + "</strong>";
+          b.innerHTML += arr[i].substr(val.length);
+          /*insert a input field that will hold the current array item's value:*/
+          b.innerHTML += "<input type='hidden' value='" + arr[i] + "'>";
+          /*execute a function when someone clicks on the item value (DIV element):*/
+              b.addEventListener("click", function(e) {
+              /*insert the value for the autocomplete text field:*/
+              inp.value = this.getElementsByTagName("input")[0].value;
+              /*close the list of autocompleted values,
+              (or any other open lists of autocompleted values:*/
+              closeAllLists();
+          });
+          a.appendChild(b);
+        }
+      }
+  });
+  /*execute a function presses a key on the keyboard:*/
+  inp.addEventListener("keydown", function(e) {
+      var x = document.getElementById(this.id + "autocomplete-list");
+      if (x) x = x.getElementsByTagName("div");
+      if (e.keyCode == 40) {
+        /*If the arrow DOWN key is pressed,
+        increase the currentFocus variable:*/
+        currentFocus++;
+        /*and and make the current item more visible:*/
+        addActive(x);
+      } else if (e.keyCode == 38) { //up
+        /*If the arrow UP key is pressed,
+        decrease the currentFocus variable:*/
+        currentFocus--;
+        /*and and make the current item more visible:*/
+        addActive(x);
+      } else if (e.keyCode == 13) {
+        /*If the ENTER key is pressed, prevent the form from being submitted,*/
+        e.preventDefault();
+        if (currentFocus > -1) {
+          /*and simulate a click on the "active" item:*/
+          if (x) x[currentFocus].click();
+        }
+      }
+  });
+  function addActive(x) {
+    /*a function to classify an item as "active":*/
+    if (!x) return false;
+    /*start by removing the "active" class on all items:*/
+    removeActive(x);
+    if (currentFocus >= x.length) currentFocus = 0;
+    if (currentFocus < 0) currentFocus = (x.length - 1);
+    /*add class "autocomplete-active":*/
+    x[currentFocus].classList.add("autocomplete-active");
+  }
+  function removeActive(x) {
+    /*a function to remove the "active" class from all autocomplete items:*/
+    for (var i = 0; i < x.length; i++) {
+      x[i].classList.remove("autocomplete-active");
+    }
+  }
+  function closeAllLists(elmnt) {
+    /*close all autocomplete lists in the document,
+    except the one passed as an argument:*/
+    var x = document.getElementsByClassName("autocomplete-items");
+    for (var i = 0; i < x.length; i++) {
+      if (elmnt != x[i] && elmnt != inp) {
+      x[i].parentNode.removeChild(x[i]);
+    }
+  }
+}
+/*execute a function when someone clicks in the document:*/
+document.addEventListener("click", function (e) {
+    closeAllLists(e.target);
+});
+}
