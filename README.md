@@ -1,9 +1,7 @@
-# covid-19-mobility-trends
-https://zealous-bohr-f5e033.netlify.app/
+# COVID-19 Mobility Trends Report
+A rebuild of Apple's COVID-19 site using D3.js. 
 
-
-Apple's Site
-https://www.apple.com/covid19/mobility
+[Apple's Origianl Site](https://www.apple.com/covid19/mobility)
 
 Currently using downloaded CSV
 
